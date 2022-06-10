@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import os
-from PIL import Image
+
 import nibabel as nib
 import torchvision
 import torchvision.transforms as transforms
@@ -12,14 +12,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-import matplotlib.pyplot as plt
 
 
-
-
-device = 'cuda:4' if torch.cuda.is_available() else 'cpu'
-# device='cpu'
-BS=100
+# device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
+# device='cuda:1' if torch.cuda.is_available() else 'cpu'
 def getCenter(image, segmentation, i, j, k):
 
     sample=image[i-16:i+16+1,j-16:j+16+1,k-1:k+1+1]
@@ -27,13 +23,15 @@ def getCenter(image, segmentation, i, j, k):
     
     return sample, center
 
-def readAll(imgPath, maskPath):
+def readAll(imgPath, maskPath, betPath):
     
     positions=[]
     
     image = nib.load(imgPath).get_fdata()
 
     annotation = nib.load(maskPath).get_fdata()
+    
+    brainMask = nib.load(betPath).get_fdata()
     
     x,y,z=image.shape
     
@@ -62,7 +60,7 @@ def readAll(imgPath, maskPath):
             for j in range(17, y-17, 2):
                 
                 
-                sample, center =getCenter(image, annotation, i, j, k)
+                sample, center =getCenter(image, brainMask, i, j, k)
                 if center.any():
                     positions.append((i,j,k))
 #     return image, annotation
@@ -78,10 +76,10 @@ def getPatch(image_full, seg_full, i, j, k):
 
 
 class NPHDataset(Dataset):
-    def __init__(self, dataPath, segPath, name, Train=False):
+    def __init__(self, dataPath, segPath, betPath, name, Train=False):
         
         self.name=name
-        self.image, self.annotation, self.imgList, self.imageShape=readAll(dataPath, segPath)
+        self.image, self.annotation, self.imgList, self.imageShape=readAll(dataPath, segPath, betPath)
         self.transform=transforms.ToTensor()
 
     def __len__(self):
@@ -103,11 +101,6 @@ class NPHDataset(Dataset):
                  }
         return sample
 
-
-# In[6]:
-
-print('----Load model----')
-ResNet=torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False)
 class MyModel(nn.Module):
     def __init__(self,ResNet, num_classes=4, num_outputs=9):
         super(MyModel, self).__init__()
@@ -135,62 +128,13 @@ class MyModel(nn.Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)              
         return x
-model = MyModel(ResNet, num_classes=4, num_outputs=4).to(device)
-model.load_state_dict(torch.load('model_backup/epoch99_ResNet2D3Class_2Layer2x2_mixed2_300.pt',map_location=device))
-modelname='2Layer2x2_mixed2_300_epoch99'
 
 
-
-# def dice(TP, FN, FP, pred, target):
-#     correct=0
-#     for i in range(target.shape[0]):
-#         for j in range(target.shape[1]):
-#             if pred[i,j].view_as(target[i,j])==target[i,j]:
-#                 TP[int(target[i,j])]+=1
-
-#                 correct+=1
-
-#             else:
-#                 FN[int(target[i,j])]+=1
-#                 FP[int(pred[i,j])]+=1
-                
-#     return correct
-
-
-# In[9]:
-
-
-# def evaluation(output, target, TP, FP, FN):
-#     total=0
-#     correct=0
-    
-#     criteria = nn.CrossEntropyLoss()
-#     loss=criteria(output, target.long())        
-#     pred=output.argmax(dim=1, keepdim=True)    
-#     N=output.shape[0]
-#     for k in range(N):
-
-#         correct+=dice(TP, FN, FP, pred[k,0, :,:], target[k,:,:])
-    
-#         total+=target.shape[1]*target.shape[2]
-
-#     return pred, loss, correct, total
-
-
-# In[14]:
-
+# In[6]:
 
 def test(test_loader, shape):
 
     model.eval()
-#     testLoss = 0
-#     testCorrect = 0
-#     testTotal=0
-
-#     result=[]
-#     TP=[0]*7
-#     FP=[0]*7
-#     FN=[0]*7
 
     # Don't update model
     print(len(test_loader))
@@ -200,7 +144,7 @@ def test(test_loader, shape):
         # Predict
         
         reconstructed=np.zeros(shape)
-        probScore=np.zeros((4, shape[0], shape[1],shape[2]))
+#         probScore=np.zeros((4, shape[0], shape[1],shape[2]))
         for batch_index, batch_samples in enumerate(test_loader):
             data, target, pos = batch_samples['img'].to(device, dtype=torch.float), batch_samples['label'].to(device), batch_samples['pos']
             output = model(data)
@@ -220,25 +164,31 @@ def test(test_loader, shape):
                 reconstructed[x:x+1+1,y:y+1+1,z]=pred[k,0,:,:].cpu()
                 
 #                 probScore[:, x-1:x+1,y-1:y+1,z]=output[k,:, :,:].cpu()
-                
-#             testCorrect+=correct
-#             testTotal+=total
             
-#             if (batch_index+1) % (50) == 0:
-#                 print('[{}({:.0f}%)]'.format(batch_index+1,(batch_index+1)/len(test_loader)*100), end=' ')
-#     return testCorrect, testTotal, TP, FP, FN, reconstructed
-    return reconstructed
+    return reconstructed, probScore
 
-def runTest(imgName):
+def runTest(imgName, modelPath, dataPath, betPath, device, BS):
+    
+    
+#     device='cpu'
+#     BS=200
 
-    dataPath=os.path.join('data-split/Scans','{}.nii.gz'.format(imgName))
-    segPath=os.path.join('data-split/Segmentation','Final_{}.nii.gz'.format(imgName))
+    print('----Load model----')
+    ResNet=torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False)
 
-    testDataset=NPHDataset(dataPath,segPath,imgName,Train=False)
-    test_loader = DataLoader(testDataset, batch_size=BS, num_workers=8, drop_last=False, shuffle=False)
+    model = MyModel(ResNet, num_classes=4, num_outputs=4).to(device)
+    model.load_state_dict(torch.load(modelPath,map_location=device))
+#     modelname='3Class_mixed2_bet_epoch49'
+
+#     dataPath=os.path.join('data-split/Scans','{}.nii.gz'.format(imgName))     
+#     segPath=os.path.join('data-split/Segmentation','Final_{}.nii.gz'.format(imgName))     
+#     betPath=os.path.join('data-split/skull-strip','{}_brain_Mask.nii.gz'.format(imgName))
+    
+    testDataset=NPHDataset(dataPath,segPath, betPath, imgName,Train=False)
+    test_loader = DataLoader(testDataset, batch_size=BS, num_workers=16, drop_last=False, shuffle=False)
     shape=testDataset.imageShape
 
-
+#     print(testDataset.__len__())
 
 
     # In[15]:
@@ -247,25 +197,26 @@ def runTest(imgName):
 
     start = time.time()
 
-#     testCorrect, testTotal, TP, FP, FN, reconstructed=test(test_loader, shape)
-    reconstructed=test(test_loader, shape)
-    
+    reconstructed, probScore=test(test_loader, shape)
+#     changeClass(reconstructed)
+    np.save('reconstructed/probScore_{}_{}.npy'.format(modelname, imgName), probScore)
     correct, total, TP, FP, FN=diceScore(reconstructed, testDataset.annotation)
     
     print(modelname, 'on', imgName)
     print('Correct point: {}/{}, {}'.format(correct, total, correct/total*100))   
-    for i in range(1,4):
+    for i in range(1,7):
+        if TP[i]+FP[i]+FN[i]==0: continue
         print('    Dice score for class{}: {}'.format(i, 2*TP[i]/(2*TP[i]+FP[i]+FN[i])))    
         
     img = nib.Nifti1Image(reconstructed, np.eye(4))
     nib.save(img, 'reconstructed/reconstructed_{}_{}.nii.gz'.format(modelname, imgName))  
     print('Save to: reconstructed_{}_{}.nii.gz'.format(modelname, imgName))
 
-    result_noNoise=eliminateNoise(reconstructed)                
+    result_noNoise=eliminateNoise(reconstructed, minArea=64)                
     correct, total, TP, FP, FN=diceScore(result_noNoise, testDataset.annotation)
         
     # In[16]:
-    img = nib.Nifti1Image(reconstructed, np.eye(4))
+    img = nib.Nifti1Image(result_noNoise, np.eye(4))
     nib.save(img, 'reconstructed/elimNoise_reconstructed_{}_{}.nii.gz'.format(modelname, imgName))  
     print('Save to: elimNoise_reconstructed_{}_{}.nii.gz'.format(modelname, imgName))
 
@@ -273,6 +224,7 @@ def runTest(imgName):
     print('{} on {} after noise cancellation'.format(modelname,imgName))
     print('Correct point: {}/{}, {}'.format(correct, total, correct/total*100))   
     for i in range(1,4):
+        if TP[i]+FP[i]+FN[i]==0: continue
         print('    Dice score for class{}: {}'.format(i, 2*TP[i]/(2*TP[i]+FP[i]+FN[i])))    
 
     end = time.time()
@@ -281,7 +233,7 @@ def runTest(imgName):
 
 # In[ ]:
 
-def eliminateNoise(label):
+def eliminateNoise(label, minArea=16):
     neighbors=[(-1,0),(1,0),(0,-1),(0,1)]
                 
     seen=set()
@@ -324,7 +276,7 @@ def eliminateNoise(label):
 
 
                     for (posX, posY, posZ) in curIsland: 
-                        if area<16:
+                        if area<minArea:
                             newLabel[posX, posY, posZ]=2
                         else:
                             newLabel[posX, posY, posZ]=label[x,y,z]
@@ -335,9 +287,9 @@ def eliminateNoise(label):
 def diceScore(initial, final):
     correct=0
     total=0
-    TP=[0]*4
-    FP=[0]*4
-    FN=[0]*4
+    TP=[0]*7
+    FP=[0]*7
+    FN=[0]*7
     
     for i in range(initial.shape[0]):
         for j in range(initial.shape[1]):
@@ -355,8 +307,23 @@ def diceScore(initial, final):
 
     return correct, total, TP, FP, FN
 
-  
+def changeClass(annotation):
+   
+    for z in range(annotation.shape[2]):
+        for x in range(annotation.shape[0]):
+            for y in range(annotation.shape[1]):
 
-imgName='NPH_shunt_002_70yo'
+                if annotation[x,y,z]==3:
+                    annotation[x,y,z]=4
 
-runTest(imgName)
+
+
+if __name__=='__main__':
+                    
+
+
+    imgName='Norm_old_003_96yo'
+    # from torchsummary import summary
+
+    # summary(model, (3, 33, 33))
+    runTest(imgName)
