@@ -144,25 +144,25 @@ def test(model, test_loader, shape, device):
 #         probScore=np.zeros((4, shape[0], shape[1],shape[2]))
         for batch_index, batch_samples in enumerate(test_loader):
             data, pos = batch_samples['img'].to(device, dtype=torch.float), batch_samples['pos']
-#             output = model(data)
-#             softmax=nn.Softmax(dim=1)
-#             output=torch.reshape(output,(output.shape[0], 4, 2, 2))
+            output = model(data)
+            softmax=nn.Softmax(dim=1)
+            output=torch.reshape(output,(output.shape[0], 4, 2, 2))
             
-#             output=softmax(output)
-#             pred=output.argmax(dim=1, keepdim=True)
+            output=softmax(output)
+            pred=output.argmax(dim=1, keepdim=True)
 
-#             N=output.shape[0]
+            N=output.shape[0]
 
-#             for k in range(N):
+            for k in range(N):
 
-#                 x, y, z=pos[k][0].item(), pos[k][1].item(), pos[k][2].item()
+                x, y, z=pos[k][0].item(), pos[k][1].item(), pos[k][2].item()
 
-#                 reconstructed[x:x+1+1,y:y+1+1,z]=pred[k,0,:,:].cpu()
+                reconstructed[x:x+1+1,y:y+1+1,z]=pred[k,0,:,:].cpu()
                 
             
     return reconstructed
 
-def runTest(imgName, modelPath, dataPath, betPath, device, BS):
+def runTest(imgName, modelPath, outputPath, dataPath, betPath, device, BS):
     
     
 #     device='cpu'
@@ -193,7 +193,7 @@ def runTest(imgName, modelPath, dataPath, betPath, device, BS):
     start = time.time()
 
     reconstructed=test(model, test_loader, shape, device)
-#     changeClass(reconstructed)
+    changeClass(reconstructed)
 #     np.save('reconstructed/probScore_{}_{}.npy'.format(modelname, imgName), probScore)
 #     correct, total, TP, FP, FN=diceScore(reconstructed, testDataset.annotation)
     
@@ -207,13 +207,13 @@ def runTest(imgName, modelPath, dataPath, betPath, device, BS):
 #     nib.save(img, 'reconstructed/reconstructed_{}_{}.nii.gz'.format(modelname, imgName))  
 #     print('Save to: reconstructed_{}_{}.nii.gz'.format(modelname, imgName))
 
-#     result_noNoise=eliminateNoise(reconstructed, minArea=64)                
+    result_noNoise=eliminateNoise(reconstructed, minArea=64)                
 #     correct, total, TP, FP, FN=diceScore(result_noNoise, testDataset.annotation)
         
 #     # In[16]:
-#     img = nib.Nifti1Image(result_noNoise, np.eye(4))
-#     nib.save(img, 'reconstructed/elimNoise_reconstructed_{}_{}.nii.gz'.format(modelname, imgName))  
-#     print('Save to: elimNoise_reconstructed_{}_{}.nii.gz'.format(modelname, imgName))
+    img = nib.Nifti1Image(result_noNoise, np.eye(4))
+    nib.save(img, os.path.join(outputPath, 'reconstructed_{}.nii.gz'.format(imgName)) )
+    print('Save to: reconstructed_{}.nii.gz'.format(imgName))
 
     
 #     print('{} on {} after noise cancellation'.format(modelname,imgName))

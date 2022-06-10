@@ -63,7 +63,7 @@ if __name__== "__main__":
     for i in range(1):
         
 #         skull_strip(os.path.join(dataPath, fileList[i]), os.path.join(betPath, fileName[i]))
-        runTest(fileName[i], modelPath, dataPath, betPath, device, BS)
+        runTest(fileName[i], modelPath,outputPath, dataPath, betPath, device, BS)
     
 #             print(fileName)
         
