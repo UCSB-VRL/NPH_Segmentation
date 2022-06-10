@@ -62,12 +62,12 @@ def readAll(imgPath, betPath):
                 if center.any():
                     positions.append((i,j,k))
 #     return image, annotation
-    return image, brainMak, positions, image.shape
+    return image, brainMask, positions, image.shape
     
 
-def getPatch(image_full,  i, j, k):
+def getPatch(image_full, brainMask, i, j, k):
     
-    image =getCenter(image_full, i, j, k)    
+    image, center=getCenter(image_full, brainMask, i, j, k)    
         
     
     return image, torch.tensor([i,j,k])
@@ -129,7 +129,7 @@ class MyModel(nn.Module):
 
 # In[6]:
 
-def test(model, test_loader, shape):
+def test(model, test_loader, shape, device):
 
     model.eval()
 
@@ -192,7 +192,7 @@ def runTest(imgName, modelPath, dataPath, betPath, device, BS):
 
     start = time.time()
 
-    reconstructed=test(model, test_loader, shape)
+    reconstructed=test(model, test_loader, shape, device)
 #     changeClass(reconstructed)
 #     np.save('reconstructed/probScore_{}_{}.npy'.format(modelname, imgName), probScore)
 #     correct, total, TP, FP, FN=diceScore(reconstructed, testDataset.annotation)
