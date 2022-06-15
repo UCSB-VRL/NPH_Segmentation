@@ -3,6 +3,7 @@ import os
 import argparse
 import subprocess
 from TestFunc import * 
+from CSFseg import *
 
 def imageList(dataPath):
     fileName=[]
