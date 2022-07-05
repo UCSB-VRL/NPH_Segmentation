@@ -3,6 +3,7 @@ import os
 import argparse
 import subprocess
 from TestFunc import * 
+from CSFseg import *
 
 def imageList(dataPath):
     fileName=[]
@@ -63,7 +64,11 @@ if __name__== "__main__":
     for i in range(1):
         
 #         skull_strip(os.path.join(dataPath, fileList[i]), os.path.join(betPath, fileName[i]))
-        runTest(fileName[i], modelPath,outputPath, dataPath, betPath, device, BS)
+        resultName=runTest(fileName[i], modelPath,outputPath, dataPath, betPath, device, BS)
+        maxArea, maxPos=segVent(fileName[i], outputPath, resultName)
+        
+        with open('CSFmax.txt',"a+") as file:
+            file.write('{},{},{}\n'.format(fileName[i], maxPos, maxArea))
     
 #             print(fileName)
         

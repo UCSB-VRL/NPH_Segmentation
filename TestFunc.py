@@ -165,7 +165,7 @@ def test(model, test_loader, shape, device):
 def runTest(imgName, modelPath, outputPath, dataPath, betPath, device, BS):
     
     
-#     device='cpu'
+    device='cuda:0' if torch.cuda.is_available() else 'cpu'
 #     BS=200
 
     print('----Load model----')
@@ -225,7 +225,7 @@ def runTest(imgName, modelPath, outputPath, dataPath, betPath, device, BS):
     end = time.time()
     print('Elapsed time:', end - start)
 
-
+    return 'reconstructed_{}.nii.gz'.format(imgName)
 # In[ ]:
 
 def eliminateNoise(label, minArea=16):
