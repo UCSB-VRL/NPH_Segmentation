@@ -29,3 +29,9 @@ __Skull Strip__
 ```sh
 bash skull_strip.sh data-split/Scans/Norm_old_005_64yo.nii.gz data-split/skull-strip/Norm_old_005_64yo
 ```
+
+### Notes
+Diff of two files
+```
+vimdiff ResNet2Layer2x2_norm_blurnoise_newdata-Copy1.py ResNet1Layer2x2_norm_blurnoise_newdata.py
+```
