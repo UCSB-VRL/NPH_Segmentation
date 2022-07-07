@@ -11,8 +11,21 @@ python3 -W ignore main.py --dataPath '/home/fei/documents/GitHub/NPH_new/data-sp
 
 ```
 
-To train, this looks maybe how to train
+To train the `ResNet2Layer2x2_norm_blurnoise`:
 
 ```python
-python3 -W ignore main.py --dataPath '/home/fei/documents/GitHub/NPH_new/data-split/Scans' --betPath '/home/fei/documents/GitHub/NPH_new/data-split/Segmentation'
+python3 ResNet2Layer2x2_norm_blurnoise_newdata-Copy1.py
+```
+
+__Sample Output from Training__
+```
+Using cache found in /home/fei/.cache/torch/hub/pytorch_vision_v0.10.0
+/home/fei/.local/lib/python3.8/site-packages/torch/nn/functional.py:718: UserWarning: Named tensors and all their associated APIs are an experimental feature and subject to change. Please do not use them for anything important until they are released as stable. (Triggered internally at  /pytorch/c10/core/TensorImpl.h:1156.)
+  return torch.max_pool2d(input, kernel_size, stride, padding, dilation, ceil_mode)
+Train Epoch: 0 [200/11333 (2%)]	Train Loss: 1.300252 Current accuracy: 44.305% 
+```
+
+__Skull Strip__
+```sh
+bash skull_strip.sh data-split/Scans/Norm_old_005_64yo.nii.gz data-split/skull-strip/Norm_old_005_64yo
 ```
