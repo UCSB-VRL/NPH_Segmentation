@@ -32,7 +32,7 @@ image_shape.txt
 Scan_patch folders have imageNorm_subjectInfo_slideNum.npy
 Segmentation patch folders have labelNorm_subjectInfo_slideNum.npy
 
-###You can find example files in trainingData_examples folder
+**You can find example files in trainingData_examples folder**
 ```
 
 __Sample Output from Training__
