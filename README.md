@@ -16,9 +16,9 @@ To train the `ResNet2Layer2x2_norm_blurnoise`:
 ```python
 python3 ResNet2Layer2x2_norm_blurnoise_newdata-Copy1.py
 ```
-```
-To run this code without any modification, what you need are:
 
+To run this code without any modification, what you need are:
+```
 Segmentation_patch_test
 Segmentation_patch_mixed_6
 Scans_patch_mixed_6
@@ -31,9 +31,9 @@ image_shape.txt
 
 Scan_patch folders have imageNorm_subjectInfo_slideNum.npy
 Segmentation patch folders have labelNorm_subjectInfo_slideNum.npy
-
-**You can find example files in trainingData_examples folder**
 ```
+**You can find example files in trainingData_examples folder**
+
 
 __Sample Output from Training__
 ```
