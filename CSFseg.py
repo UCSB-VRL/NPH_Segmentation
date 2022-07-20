@@ -243,7 +243,6 @@ def numIsland(label,connectivity=8):
     return island, maxArea, maxPos
 
 def changeClassResult(segmentation):
-
     for x in range(segmentation.shape[0]):
         for y in range(segmentation.shape[1]):
             for z in range(segmentation.shape[2]):
@@ -252,19 +251,7 @@ def changeClassResult(segmentation):
                 #CSF into class10
                 elif segmentation[x,y,z]==1:
                     segmentation[x,y,z]=10
-def changeClassGT(segmentation):
-    for x in range(segmentation.shape[0]):
-        for y in range(segmentation.shape[1]):
-            for z in range(segmentation.shape[2]):
-                
-                if segmentation[x,y,z]==5:
-                    segmentation[x,y,z]=2
-                
-                elif segmentation[x,y,z]==3 or segmentation[x,y,z]==6:
-                    segmentation[x,y,z]=1
-    
-                    
-                    
+  
 def saveImage(array, name):
     img = nib.Nifti1Image(array, np.eye(4))
     nib.save(img, name)  
@@ -279,13 +266,17 @@ def segVent(imgName, outputPath, resultName):
     #step 1: get subarachnoid connected to skull
     connectToBoundary(result, 10, tolerance=5)
 
+
     #step 2: get max area of remaining CSF
 
     island, Area, maxPos=maxArea(result, 10)
     for pos in island:
         result[pos]=1
-    # saveImage(result, 'vent'+resultName)
+    
 
+
+
+    # check 7 slices
     for k in range(maxPos[2]-3,maxPos[2]+4):
 
         if k==maxPos[2]:continue
@@ -302,8 +293,7 @@ def segVent(imgName, outputPath, resultName):
                 if result[i,j,k]==10:
                     result[i,j,k]=3
 
-
-    saveImage(result[maxPos[2]-3:maxPos[2]+4], os.path.join(outputPath, 'vent'+resultName))
+    saveImage(result, os.path.join(outputPath, 'vent'+resultName))
     
     return Area, maxPos
     

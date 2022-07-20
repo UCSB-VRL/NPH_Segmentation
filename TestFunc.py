@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+from scipy import ndimage
 
 
 # device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
@@ -23,6 +23,13 @@ def getCenter(image, segmentation, i, j, k):
     
     return sample, center
 
+def fillHoles(imgName):
+    image=nib.load('{}_Mask.nii.gz'.format(imgName)).get_fdata()
+    for z in range(image.shape[2]):
+        image[:,:,z]=ndimage.binary_fill_holes(image[:,:,z]).astype(int)
+    
+    saveImage(image, '{}_Mask.nii.gz'.format(imgName))    
+    
 def readAll(imgPath, betPath):
     
     positions=[]
@@ -32,6 +39,7 @@ def readAll(imgPath, betPath):
     brainMask = nib.load(betPath).get_fdata()
     
     x,y,z=image.shape
+    
     
     for z in range(image.shape[2]):
         for x in range(image.shape[0]):
@@ -134,7 +142,7 @@ def test(model, test_loader, shape, device):
     model.eval()
 
     # Don't update model
-    print(len(test_loader))
+#     print(len(test_loader))
     with torch.no_grad():
         predUnique={}
         targetUnique={}
@@ -162,21 +170,26 @@ def test(model, test_loader, shape, device):
             
     return reconstructed
 
-def runTest(imgName, modelPath, outputPath, dataPath, betPath, device, BS):
-    
-    
-    device='cuda:0' if torch.cuda.is_available() else 'cpu'
-#     BS=200
-
-    print('----Load model----')
+def loadModel(modelPath, device):
     ResNet=torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False)
 
     model = MyModel(ResNet, num_classes=4, num_outputs=4).to(device)
     model.load_state_dict(torch.load(modelPath,map_location=device))
+    
+    return model
+    
+def checkDevice(device):
+    device=device if torch.cuda.is_available() else 'cpu'
+    return device
+
+def runTest(imgName, outputPath, dataPath, betPath, device, BS, model):
+      
+#     BS=200
+
 #     modelname='3Class_mixed2_bet_epoch49'
 
     dataPath=os.path.join(dataPath,'{}.nii.gz'.format(imgName))     
-#     segPath=os.path.join('data-split/Segmentation','Final_{}.nii.gz'.format(imgName))     
+ 
     betPath=os.path.join(betPath,'{}_Mask.nii.gz'.format(imgName))
     
     testDataset=NPHDataset(dataPath, betPath, imgName,Train=False)
@@ -187,7 +200,7 @@ def runTest(imgName, modelPath, outputPath, dataPath, betPath, device, BS):
 
 
     # In[15]:
-    print('----Start Running----')
+    print('Start Running:', imgName)
     import time
 
     start = time.time()
@@ -197,7 +210,7 @@ def runTest(imgName, modelPath, outputPath, dataPath, betPath, device, BS):
 #     np.save('reconstructed/probScore_{}_{}.npy'.format(modelname, imgName), probScore)
 #     correct, total, TP, FP, FN=diceScore(reconstructed, testDataset.annotation)
     
-#     print(modelname, 'on', imgName)
+    print(imgName, end=' ')
 #     print('Correct point: {}/{}, {}'.format(correct, total, correct/total*100))   
 #     for i in range(1,7):
 #         if TP[i]+FP[i]+FN[i]==0: continue
@@ -209,24 +222,18 @@ def runTest(imgName, modelPath, outputPath, dataPath, betPath, device, BS):
 
     result_noNoise=eliminateNoise(reconstructed, minArea=64)                
 #     correct, total, TP, FP, FN=diceScore(result_noNoise, testDataset.annotation)
-        
+    saveImage(result_noNoise, os.path.join(outputPath, 'reconstructed_{}.nii.gz'.format(imgName)))    
 #     # In[16]:
-    img = nib.Nifti1Image(result_noNoise, np.eye(4))
-    nib.save(img, os.path.join(outputPath, 'reconstructed_{}.nii.gz'.format(imgName)) )
-    print('Save to: reconstructed_{}.nii.gz'.format(imgName))
-
-    
-#     print('{} on {} after noise cancellation'.format(modelname,imgName))
-#     print('Correct point: {}/{}, {}'.format(correct, total, correct/total*100))   
-#     for i in range(1,4):
-#         if TP[i]+FP[i]+FN[i]==0: continue
-#         print('    Dice score for class{}: {}'.format(i, 2*TP[i]/(2*TP[i]+FP[i]+FN[i])))    
 
     end = time.time()
     print('Elapsed time:', end - start)
 
     return 'reconstructed_{}.nii.gz'.format(imgName)
 # In[ ]:
+def saveImage(image, name):
+    img = nib.Nifti1Image(image, np.eye(4))
+    nib.save(img, name )
+
 
 def eliminateNoise(label, minArea=16):
     neighbors=[(-1,0),(1,0),(0,-1),(0,1)]

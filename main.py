@@ -4,6 +4,9 @@ import argparse
 import subprocess
 from TestFunc import * 
 from CSFseg import *
+from os.path import exists
+
+
 
 def imageList(dataPath):
     fileName=[]
@@ -24,14 +27,15 @@ def imageList(dataPath):
          
     else:
         raise ValueError('Invalid data path input')
-            
+    
+    fileList, fileName = zip(*sorted(zip(fileList, fileName)))
     return fileList, fileName
 
 #skull strip
 def skull_strip(inName, outName):
     subprocess.call(['bash', 'skull_strip.sh', inName, outName])
-    
-    print('done')
+    fillHoles(outName)
+    print(outName, 'skull strip done.')
     
 
 
@@ -61,14 +65,24 @@ if __name__== "__main__":
     
     fileList, fileName=imageList(dataPath)
     
-    for i in range(1):
+    device=checkDevice(device)
+    model=loadModel(modelPath, device)
+    
+    print('Total number:', len(fileName))
+    for i in range(len(fileName)):
         
-#         skull_strip(os.path.join(dataPath, fileList[i]), os.path.join(betPath, fileName[i]))
-        resultName=runTest(fileName[i], modelPath,outputPath, dataPath, betPath, device, BS)
+        if not exists(os.path.join(dataPath,'{}.nii.gz'.format(fileName[i]))):
+            print(fileName[i], 'not exists')
+            continue
+        
+        skull_strip(os.path.join(dataPath, fileList[i]), os.path.join(betPath, fileName[i]))
+        resultName=runTest(fileName[i], outputPath, dataPath, betPath, device, BS, model)
         maxArea, maxPos=segVent(fileName[i], outputPath, resultName)
+
         
         with open('CSFmax.txt',"a+") as file:
             file.write('{},{},{}\n'.format(fileName[i], maxPos, maxArea))
+
     
 #             print(fileName)
         
