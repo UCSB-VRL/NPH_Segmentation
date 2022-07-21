@@ -12,7 +12,9 @@ python3 main.py
 ### II. Basic Description 
 
 **What we need** : data-split/Scans/{filename}.nii.gz
+
 **Skull stripping result will be stored in** : data-split/skull-strip/{filename}_Mask.nii.gz
+
 **Final segment result will be stored in** : reconstructed/ventreconstructed_{filename}.nii.gz
 
 
