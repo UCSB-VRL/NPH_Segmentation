@@ -292,10 +292,26 @@ def segVent(imgName, outputPath, resultName):
             for j in range(y):
                 if result[i,j,k]==10:
                     result[i,j,k]=3
+    
+    #check max pos of ventricle
+    ventmaxArea = 0
+    ventmaxPos = 0
+    for k in range(maxPos[2]-3,maxPos[2]+4):
+        ventvoxel = 0
+        for i in range(x):
+            for j in range(y):
+                if result[i,j,k]==1:
+                    ventvoxel +=1
+        if ventvoxel > ventmaxArea :
+            ventmaxArea = ventvoxel
+            ventmaxPos = k
+    print('------------',imgName,'-------------')
+    print('middle of 7 slices :', maxPos[2])
+    print('max ventricle pos :',ventmaxPos)            
 
     saveImage(result, os.path.join(outputPath, 'vent'+resultName))
     
-    return Area, maxPos
+    return Area, maxPos, result
     
 
     #Step 3: seg cerebellum

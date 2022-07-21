@@ -186,8 +186,6 @@ def runTest(imgName, outputPath, dataPath, betPath, device, BS, model):
       
 #     BS=200
 
-#     modelname='3Class_mixed2_bet_epoch49'
-
     dataPath=os.path.join(dataPath,'{}.nii.gz'.format(imgName))     
  
     betPath=os.path.join(betPath,'{}_Mask.nii.gz'.format(imgName))
@@ -197,6 +195,7 @@ def runTest(imgName, outputPath, dataPath, betPath, device, BS, model):
     shape=testDataset.imageShape
 
 #     print(testDataset.__len__())
+
 
 
     # In[15]:
@@ -286,7 +285,10 @@ def eliminateNoise(label, minArea=16):
 
     return newLabel
 
-def diceScore(initial, final):
+def diceScore(imgName, initial, gtPath):
+    gtPath=os.path.join(gtPath,'Final_{}.nii.gz'.format(imgName))
+    final = nib.load(gtPath).get_fdata()
+
     correct=0
     total=0
     TP=[0]*7
@@ -306,6 +308,11 @@ def diceScore(initial, final):
                 else:
                     FN[int(final[i,j,k])]+=1
                     FP[int(initial[i,j,k])]+=1
+
+    print('Correct point: {}/{}, Accuracy : {}'.format(correct, total, correct/total*100))   
+    for i in range(1,5):
+        if TP[i]+FP[i]+FN[i]==0: continue
+        print('    Dice score for class{}: {}'.format(i, 2*TP[i]/(2*TP[i]+FP[i]+FN[i]))) 
 
     return correct, total, TP, FP, FN
 

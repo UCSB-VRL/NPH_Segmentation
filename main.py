@@ -52,6 +52,7 @@ if __name__== "__main__":
     parser.add_argument('--betPath', default='data-split/skull-strip')
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--batch_size', default=200)
+    parser.add_argument('--gtPath', default = 'data-split/gt')
 
     args = parser.parse_args()
     
@@ -60,6 +61,7 @@ if __name__== "__main__":
     modelPath=args.modelPath
     outputPath=args.outputPath
     betPath=args.betPath
+    gtPath=args.gtPath
     device=args.device
     BS=args.batch_size
     
@@ -77,8 +79,8 @@ if __name__== "__main__":
         
         skull_strip(os.path.join(dataPath, fileList[i]), os.path.join(betPath, fileName[i]))
         resultName=runTest(fileName[i], outputPath, dataPath, betPath, device, BS, model)
-        maxArea, maxPos=segVent(fileName[i], outputPath, resultName)
-
+        maxArea, maxPos, finalimg =segVent(fileName[i], outputPath, resultName)
+        correct, total, TP, FP, FN = diceScore(fileName[i],finalimg,gtPath)
         
         with open('CSFmax.txt',"a+") as file:
             file.write('{},{},{}\n'.format(fileName[i], maxPos, maxArea))
