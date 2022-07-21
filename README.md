@@ -1,6 +1,6 @@
 # NPH Segmentation
 ## 😃 Hazel's branch 😃
-### from Fei's module
+### from Fei's model
 ---
 
 # Test code
