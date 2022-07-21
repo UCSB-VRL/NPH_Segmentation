@@ -1,5 +1,5 @@
 # NPH Segmentation
-## Hazel's branch
+## 😃 Hazel's branch 😃
 ### originally from Fei's module
 ---
 
@@ -28,6 +28,7 @@ python3 main.py
 ### IV. Progress
 
 ```
-1. These codes don't need **final segmented files** which are ground truth files.
-2. Future work will be focused on figuring out how to do 4 classes segmentation for whole slices, not only 7 slices.
+1. Use BET result instead of ground truth (manually segmented file) -> done
+2. Caculating Dice score with result image -> on progress
+3. Future work will be focused on figuring out how to do 4 classes segmentation for whole slices, not only 7 slices.
 ```
