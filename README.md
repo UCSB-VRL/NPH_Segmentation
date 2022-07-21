@@ -54,7 +54,7 @@ middle of 7 slices : 18
 max ventricle pos : 18
 ```
 
-### IV. Progress
+### V. Progress
 
 ```
 1. Use BET result instead of ground truth (manually segmented file) -> done
