@@ -29,37 +29,25 @@ python3 main.py
 ```
 ### IV. Example output
 ```
-Using cache found in /home/fei/.cache/torch/hub/pytorch_vision_v0.10.0
-Total number: 114
-data-split/Scans/NPH_noShunt_001_70yo.nii.gz
-data-split/skull-strip/NPH_noShunt_001_70yo
-min 0 thresh2 0 thresh 3.75232 thresh98 37.5232 max 87.4668
-c-of-g 125.053 95.1227 70.4457 mm
-radius 74.9516 mm
-median within-brain intensity 27.4668
-self-intersection total 3.48464e+06 (threshold=4000.0) 
-thus will rerun with higher smoothness constraint
-self-intersection total 1.04998e+06 (threshold=4000.0) 
-thus will rerun with higher smoothness constraint
-self-intersection total 236876 (threshold=4000.0) 
-thus will rerun with higher smoothness constraint
-self-intersection total 84.759 (threshold=4000.0) 
-data-split/skull-strip/NPH_noShunt_001_70yo skull strip done.
-/home/fei/anaconda3/lib/python3.9/site-packages/torch/utils/data/dataloader.py:478: UserWarning: This DataLoader will create 16 worker processes in total. Our suggested max number of worker in current system is 8, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
-  warnings.warn(_create_warning_msg(
-Start Running: NPH_noShunt_001_70yo
-NPH_noShunt_001_70yo Elapsed time: 223.49737548828125
------------- NPH_noShunt_001_70yo -------------
-middle of 7 slices : 18
-max ventricle pos : 18
+Start Running: Norm_old_003_96yo
+Norm_old_003_96yo Elapsed time: 201.69443917274475
+------------ Norm_old_003_96yo -------------
+middle of 7 slices : 21
+max ventricle pos : 21
+Correct point: 921933/1172347, Accuracy : 78.63994192845634
+    Dice score for class1: 0.7630208055907701
+    Dice score for class2: 0.8678160082429361
+    Dice score for class3: 0.7963684631485799
+    Dice score for class4: 0.5364105560424579
+
 ```
 
 ### V. Progress
 
 ```
 1. Use BET result instead of ground truth (manually segmented file) -> done
-2. Caculating Dice score with result image -> on progress
-3. Future work will be focused on figuring out how to do 4 classes segmentation for whole slices, not only 7 slices.
+2. Caculating Dice score with result image -> done
+3. Figure out how to do 4 classes segmentation for whole slices, not only 7 slices.
 ```
 
 # Training Code
